@@ -1,0 +1,37 @@
+########### Python 3.2 #############
+import http.client, urllib.request, urllib.parse, urllib.error, base64
+
+
+headers = {'api_key':'b614f68d90a24f849b018c81e543704a'}
+
+
+headers = {
+    # Request headers
+    'api_key': '{subscription key}',
+
+params = urllib.parse.urlencode({
+})
+
+try:
+    conn = http.client.HTTPSConnection('api.wmata.com')
+    conn.request("GET", "/StationPrediction.svc/json/GetPrediction/{StationCodes}?%s" % params, "{body}", headers)
+    response = conn.getresponse()
+    data = response.read()
+    print(data)
+    conn.close()
+except Exception as e:
+    print("[Errno {0}] {1}".format(e.errno, e.strerror))
+
+
+params = urllib.parse.urlencode({
+})
+
+try:
+    conn = http.client.HTTPSConnection('api.wmata.com')
+    conn.request("GET", "/StationPrediction.svc/json/GetPrediction/{StationCodes}?%s" % params, "{body}", headers)
+    response = conn.getresponse()
+    data = response.read()
+    print(data)
+    conn.close()
+except Exception as e:
+    print("[Errno {0}] {1}".format(e.errno, e.strerror
