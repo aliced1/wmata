@@ -2,7 +2,7 @@ import requests
 import json
 import header
 
-class StationTrains:
+class StationStatus:
 
     #response = requests.get("https://api.wmata.com/Misc/Validate?", headers=header.apiKey)
     #print(response.json())
