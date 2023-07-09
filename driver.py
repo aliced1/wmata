@@ -9,10 +9,11 @@ import weather
 
 class Driver():
 
-    # def __init__(self, *args, **kwargs):
-    #     super(Driver, self).__init__(*args, **kwargs)
-
-    def draw_screen(self):
+    def __init__(self) -> None:
+        self.current_weather = weather.Weather()
+        self.canvas_setup()
+    
+    def canvas_setup(self) -> None:
         
         options = rgbmatrix.RGBMatrixOptions()
         
@@ -35,37 +36,38 @@ class Driver():
         options.drop_privileges=False
         self.matrix = rgbmatrix.RGBMatrix(options = options)
         
-        double_buffer = self.matrix.CreateFrameCanvas()
-        current_weather = weather.Weather()
+        self.double_buffer = self.matrix.CreateFrameCanvas()
 
-        # print(dir(double_buffer))
+    def draw_weather(self):
+        if self.current_weather.is_rain_above_percent(30):
+            weather_image = Image.open('rain.png').convert('RGB')
+        else:
+            weather_image = Image.open('sun.png').convert('RGB')
+        self.double_buffer.SetImage(weather_image, 0, 0)
+
+    def draw_screen(self):
+        
+        # DEBUG
+        # print('buffer type = ', type(self.double_buffer))
+        # print(dir(double_buffer))s
 
         while True:
             
-            if current_weather.is_rain_above_percent(30):
-                self.image = Image.open('rain.png').convert('RGB')
-            else:
-                self.image = Image.open('sun.png').convert('RGB')
+            # TODO add display for cloud cover, snow, wind, rain depth
+
+            self.draw_weather()
             
             font = graphics.Font()
-            font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/7x13.bdf")
+            font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
             textColor = graphics.Color(255, 0, 0)
-            my_text = 'sunny'
+            my_text = '101' + u'\u00B0'
             
-            double_buffer.Clear()
-            graphics.DrawText(double_buffer, font, 20, 10, textColor, my_text)
-            
-            # self.flag = not self.flag
-            
-            # if self.flag == 0:
-            #     self.image = Image.open('sun.png').convert('RGB')
-            # else:
-            #     self.image = Image.open('rain.png').convert('RGB')
+            graphics.DrawText(self.double_buffer, font, 20, 10, textColor, my_text)
 
-            xpos = 0
-            double_buffer.SetImage(self.image, xpos)
+            # DEBUG
+            # double_buffer.SetImage(Image.open('white20x20.png').convert('RGB'), 20)
 
-            double_buffer = self.matrix.SwapOnVSync(double_buffer)
+            self.double_buffer = self.matrix.SwapOnVSync(self.double_buffer)
             time.sleep(0.5)
 
 
@@ -75,6 +77,9 @@ class Driver():
 # if you have a chain of four
 if __name__ == "__main__":
     driver = Driver()
+
+    driver.current_weather.print_weather_dict()
+
     try:
         print("Press CTRL-C to stop sample")
         driver.draw_screen()
