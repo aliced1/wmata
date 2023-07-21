@@ -14,7 +14,6 @@ class Weather():
         '&hourly=apparent_temperature,precipitation_probability,precipitation'
         '&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch'
         '&forecast_days=1'
-
         )).json()
         # print(json.dumps(response, indent=4))
         return response
@@ -25,9 +24,13 @@ class Weather():
     def is_rain_above_percent(self, percent) -> bool:
         rain_probabilities_list = self.weather_dict.get('hourly').get('precipitation_probability')
         return (max(rain_probabilities_list) >= percent)
-
-    def test_print(self):
-        print(self.weather_dict.get('hourly').get('precipitation_probability'))
+    
+    # TODO combine into one function
+    def get_daily_high_apparent_temp(self):
+        return round(max(self.weather_dict.get('hourly').get('apparent_temperature')))
+    
+    def get_daily_low_apparent_temp(self):
+        return round(min(self.weather_dict.get('hourly').get('apparent_temperature')))
     
     def print_weather_dict(self):
         df = pd.DataFrame.from_dict(self.weather_dict.get('hourly'))
