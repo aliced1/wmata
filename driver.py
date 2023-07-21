@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import sys
 import time
+import datetime
+import threading
+import pytz
 from rgbmatrix import graphics
 import rgbmatrix
 from samplebase import SampleBase
@@ -14,6 +17,10 @@ class Driver():
         self.canvas_setup()
     
     def canvas_setup(self) -> None:
+
+        # When drawing with coordinates, (x, y) is measured from the upper left
+        # side of the matrix. Whatever is being drawn is measured from the 
+        # lower left corner of the shape. 
         
         options = rgbmatrix.RGBMatrixOptions()
         
@@ -45,8 +52,46 @@ class Driver():
             weather_image = Image.open('sun.png').convert('RGB')
         self.double_buffer.SetImage(weather_image, 0, 0)
 
-    def draw_screen(self):
+    def draw_temperatures(self):
+
+        # Set up to draw high temperature
+        font = graphics.Font()
+
+        # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
+        font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        textColor = graphics.Color(255, 0, 0)
+        daily_high = driver.current_weather.get_daily_high_apparent_temp()
+        my_text = str(daily_high) + u'\u00B0'
         
+        # x = 20, y = 10
+        graphics.DrawText(self.double_buffer, font, 20, 8, textColor, my_text)
+
+        # Draw low temperature
+        font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        textColor = graphics.Color(0, 0, 255)
+        daily_low = driver.current_weather.get_daily_low_apparent_temp()
+        my_text = str(daily_low) + u'\u00B0'
+        
+        # x = 20, y = 10, pixels measured from upper left corner
+        graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
+
+    def test_me(self):
+        while True:
+            
+            current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
+            print(current_time.hour)
+            time.sleep(5)
+
+
+
+
+    def draw_screen(self):
+
+        flag = 0
+        
+        t1 = threading.Thread(target=self.test_me())
+        print(self.current_weather)
+
         # DEBUG
         # print('buffer type = ', type(self.double_buffer))
         # print(dir(double_buffer))s
@@ -54,21 +99,19 @@ class Driver():
         while True:
             
             # TODO add display for cloud cover, snow, wind, rain depth
-
+            # Need to have a separate way to update the weather data using a cron job
+            # only call API when running cron job
+            # After pulling new data, update images and buffer for loop
             self.draw_weather()
+            self.draw_temperatures()
             
-            font = graphics.Font()
-            font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
-            textColor = graphics.Color(255, 0, 0)
-            my_text = '101' + u'\u00B0'
-            
-            graphics.DrawText(self.double_buffer, font, 20, 10, textColor, my_text)
+
 
             # DEBUG
             # double_buffer.SetImage(Image.open('white20x20.png').convert('RGB'), 20)
 
             self.double_buffer = self.matrix.SwapOnVSync(self.double_buffer)
-            time.sleep(0.5)
+            time.sleep(5)
 
 
 # Main function
@@ -79,6 +122,7 @@ if __name__ == "__main__":
     driver = Driver()
 
     driver.current_weather.print_weather_dict()
+    driver.current_weather.get_daily_high_apparent_temp()
 
     try:
         print("Press CTRL-C to stop sample")
