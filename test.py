@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-from threading import Timer
-
-def hello():
-    print("hello, world")
+import multiprocessing
 
 
-t = Timer(2.0, hello)
+def test1():
+    print('I am thread 1')
 
-while(True):
-    t.start()  # after 30 seconds, "hello, world" will be printed
+def test2():
+    print('I am thread 2')
+
+
+if __name__ == "__main__":  # confirms that the code is under main function
+    proc1 = multiprocessing.Process(target=test1)
+    proc2 = multiprocessing.Process(target=test2)
+    proc1.start()
+    proc2.start()
+    proc1.join()
+    proc2.join()
