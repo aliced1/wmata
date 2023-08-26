@@ -11,9 +11,9 @@ class Weather():
     def update_weather(self) -> dict:
         response = requests.get((
         'https://api.open-meteo.com/v1/forecast?latitude=38.8951&longitude=-77.0364'
-        '&hourly=apparent_temperature,precipitation_probability,precipitation'
-        '&temperature_unit=fahrenheit&windspeed_unit=mph&precipitation_unit=inch'
-        '&forecast_days=1'
+        '&hourly=apparent_temperature,precipitation_probability,precipitation,snowfall,'
+        'cloudcover,visibility,windspeed_10m,windgusts_10m&temperature_unit=fahrenheit'
+        '&windspeed_unit=mph&precipitation_unit=inch&forecast_days=1'
         )).json()
         # print(json.dumps(response, indent=4))
         return response

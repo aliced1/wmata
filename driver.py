@@ -2,8 +2,8 @@
 import sys
 import time
 import datetime
-import threading
 import pytz
+import multiprocessing
 from rgbmatrix import graphics
 import rgbmatrix
 from samplebase import SampleBase
@@ -47,9 +47,9 @@ class Driver():
 
     def draw_weather(self):
         if self.current_weather.is_rain_above_percent(30):
-            weather_image = Image.open('rain.png').convert('RGB')
+            weather_image = Image.open('./weather_images/rain.png').convert('RGB')
         else:
-            weather_image = Image.open('sun.png').convert('RGB')
+            weather_image = Image.open('./weather_images/sun.png').convert('RGB')
         self.double_buffer.SetImage(weather_image, 0, 0)
 
     def draw_temperatures(self):
@@ -75,22 +75,31 @@ class Driver():
         # x = 20, y = 10, pixels measured from upper left corner
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
 
-    def test_me(self):
+    def periodic_refresh_tracker(self, shared_flag):
+        current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
+        hour = current_time.hour
+        
         while True:
-            
-            current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
-            print(current_time.hour)
-            time.sleep(5)
-
-
-
+            if current_time.hour != hour:
+                hour = current_time.hour
+                shared_flag.value = 1
+            time.sleep(60)
 
     def draw_screen(self):
 
-        flag = 0
-        
-        t1 = threading.Thread(target=self.test_me())
-        print(self.current_weather)
+        # print('before multiprocessing')
+        flag = multiprocessing.Value('i', 0)
+        # print(flag.value)
+        t1 = multiprocessing.Process(target=self.periodic_refresh_tracker, args=(flag,))
+        t1.start()
+
+        if flag.value == 1:
+            flag.value = 0
+            self.current_weather.update_weather()
+            self.draw_temperatures()
+            self.draw_weather()
+            
+        # print('in original thread')
 
         # DEBUG
         # print('buffer type = ', type(self.double_buffer))
@@ -108,7 +117,7 @@ class Driver():
 
 
             # DEBUG
-            # double_buffer.SetImage(Image.open('white20x20.png').convert('RGB'), 20)
+            # self.double_buffer.SetImage(Image.open('sun.png').convert('RGB'), 20)
 
             self.double_buffer = self.matrix.SwapOnVSync(self.double_buffer)
             time.sleep(5)
