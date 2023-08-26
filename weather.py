@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+import datetime
+import pytz
 import requests
 import json
 import pandas as pd
@@ -22,8 +24,16 @@ class Weather():
         return self.weather_dict
 
     def is_rain_above_percent(self, percent) -> bool:
+
+        current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
+        hour = current_time.hour
+
         rain_probabilities_list = self.weather_dict.get('hourly').get('precipitation_probability')
-        return (max(rain_probabilities_list) >= percent)
+        
+        # return max of current hour onwards - useful when it rains early in the morning but not afterwards
+        return (max(rain_probabilities_list[hour:]) >= percent)
+    
+
     
     # TODO combine into one function
     def get_daily_high_apparent_temp(self):

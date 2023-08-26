@@ -47,9 +47,9 @@ class Driver():
 
     def draw_weather(self):
         if self.current_weather.is_rain_above_percent(30):
-            weather_image = Image.open('./weather_images/rain.png').convert('RGB')
+            weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
         else:
-            weather_image = Image.open('./weather_images/sun.png').convert('RGB')
+            weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
         self.double_buffer.SetImage(weather_image, 0, 0)
 
     def draw_temperatures(self):
@@ -58,21 +58,20 @@ class Driver():
         font = graphics.Font()
 
         # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
-        font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        
+        # draw high
         textColor = graphics.Color(255, 0, 0)
         daily_high = driver.current_weather.get_daily_high_apparent_temp()
         my_text = str(daily_high) + u'\u00B0'
-        
-        # x = 20, y = 10
+        # x = 20, y = 8
         graphics.DrawText(self.double_buffer, font, 20, 8, textColor, my_text)
 
         # Draw low temperature
-        font.LoadFont("adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
         textColor = graphics.Color(0, 0, 255)
         daily_low = driver.current_weather.get_daily_low_apparent_temp()
         my_text = str(daily_low) + u'\u00B0'
-        
-        # x = 20, y = 10, pixels measured from upper left corner
+        # x = 20, y = 16, pixels measured from upper left corner
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
 
     def periodic_refresh_tracker(self, shared_flag):
@@ -81,25 +80,25 @@ class Driver():
         
         while True:
             if current_time.hour != hour:
+                print('set flag to update weather!')
                 hour = current_time.hour
                 shared_flag.value = 1
-            time.sleep(60)
+                time.sleep(60) # Use different sleep times for weather vs metro?
 
+
+    # @profile
     def draw_screen(self):
 
-        # print('before multiprocessing')
+        # set buffer initially
+        # otherwise won't update until the turn of the hour (for weather)
+        self.current_weather.update_weather()
+        self.draw_temperatures()
+        self.draw_weather()
+
+        # spin off process to track timers with shared state variable "flag" 
         flag = multiprocessing.Value('i', 0)
-        # print(flag.value)
         t1 = multiprocessing.Process(target=self.periodic_refresh_tracker, args=(flag,))
         t1.start()
-
-        if flag.value == 1:
-            flag.value = 0
-            self.current_weather.update_weather()
-            self.draw_temperatures()
-            self.draw_weather()
-            
-        # print('in original thread')
 
         # DEBUG
         # print('buffer type = ', type(self.double_buffer))
@@ -108,25 +107,21 @@ class Driver():
         while True:
             
             # TODO add display for cloud cover, snow, wind, rain depth
-            # Need to have a separate way to update the weather data using a cron job
-            # only call API when running cron job
             # After pulling new data, update images and buffer for loop
-            self.draw_weather()
-            self.draw_temperatures()
-            
 
+            # only update buffer to draw weather and temp after we've pulled new weather data
+            if flag.value == 1:
+                print('updating weather and buffer in main loop!')
+                flag.value = 0
+                self.current_weather.update_weather()
+                self.draw_temperatures()
+                self.draw_weather()
 
-            # DEBUG
-            # self.double_buffer.SetImage(Image.open('sun.png').convert('RGB'), 20)
-
-            self.double_buffer = self.matrix.SwapOnVSync(self.double_buffer)
+            # self.double_buffer = self.matrix.SwapOnVSync(self.double_buffer)
+            self.matrix.SwapOnVSync(self.double_buffer)
             time.sleep(5)
 
 
-# Main function
-# e.g. call with
-#  sudo ./image-scroller.py --chain=4
-# if you have a chain of four
 if __name__ == "__main__":
     driver = Driver()
 
