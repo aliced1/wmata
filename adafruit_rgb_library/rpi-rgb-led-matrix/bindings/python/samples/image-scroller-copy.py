@@ -27,7 +27,7 @@ class ImageScroller(SampleBase):
             double_buffer.SetImage(self.image, -xpos)
             double_buffer.SetImage(self.image, -xpos + img_width)
 
-            double_buffer = self.matrix.SwapOnVSync(double_buffer)
+            self.matrix.SwapOnVSync(double_buffer)
             time.sleep(3)
 
 # Main function
