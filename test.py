@@ -4,25 +4,20 @@ import time
 import datetime
 import pytz
 import subprocess
+import csv
+import schedule
 
-
-# def test1():
-#     print('I am thread 1')
-
-# def test2():
-#     print('I am thread 2')
-
-
-def profile_test():
-    current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
-    print(current_time)    
+def job():
+    print("I'm working...")
+    return
 
 if __name__ == "__main__":  # confirms that the code is under main function
-    # flag = multiprocessing.Value('i', 0)
-    # proc1 = multiprocessing.Process(target=test1, args=(flag,))
-    # proc2 = multiprocessing.Process(target=test2)
-    # proc1.start()
-    # proc2.start()
-    # proc1.join()
-    # proc2.join()
-    profile_test()
+    schedule.every().day.at("02:00", 'US/Eastern').do(job)
+    # schedule.every().minute.at(":47").do(job)
+
+    while True:
+        schedule.run_pending()
+        print(schedule.idle_seconds(), datetime.datetime.now(pytz.timezone('US/Eastern')))
+        time.sleep(1) # wait one minute
+
+    
