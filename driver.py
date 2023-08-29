@@ -27,23 +27,6 @@ class Driver():
         schedule.every().hour.do(self.draw_temperatures)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)    
 
-
-    def vocab_setup(self) -> None:
-        my_file = open('vocab.csv', 'r')
-        reader = csv.reader(my_file)
-
-        next(reader) # skip header
-        self.vocab_list = []
-        for line in reader:
-            self.vocab_list.append(line) # list format is [[word1, definition1], [word2, definition2], ...]
-        
-        schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)    
-
-    def pick_random_word(self) -> None:
-        # pick a random word
-        word_index = random.randrange(0, len(self.vocab_list))
-        self.word_of_day = self.vocab_list[word_index]
-    
     def canvas_setup(self) -> None:
 
         # When drawing with coordinates, (x, y) is measured from the upper left
@@ -73,7 +56,29 @@ class Driver():
         
         self.double_buffer = self.matrix.CreateFrameCanvas()
 
+    def vocab_setup(self) -> None:
+        my_file = open('vocab.csv', 'r')
+        reader = csv.reader(my_file)
+
+        next(reader) # skip header
+        self.vocab_list = []
+        for line in reader:
+            self.vocab_list.append(line) # list format is [[word1, definition1], [word2, definition2], ...]
+        
+        schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)    
+
+    def pick_random_word(self) -> None:
+
+        print('Picking random word!')
+
+        # pick a random word
+        word_index = random.randrange(0, len(self.vocab_list))
+        self.word_of_day = self.vocab_list[word_index]
+
     def draw_weather(self):
+
+        print('Drawing weather!')
+
         if self.current_weather.is_rain_above_percent(30):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
         else:
@@ -81,6 +86,8 @@ class Driver():
         self.double_buffer.SetImage(weather_image, 0, 0)
 
     def draw_temperatures(self):
+
+        print('Drawing temps!')
 
         # Set up to draw high temperature
         font = graphics.Font()
@@ -138,12 +145,16 @@ class Driver():
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
         font_width = 6
         font_height = 13
+        blackout = Image.open('/home/alice/wmata/16x64_black.png').convert('RGB')
         textColor = graphics.Color(172, 44, 210)
         vocab_display_string = self.word_of_day[0] + ' -- ' + self.word_of_day[1] + '     '
+        display_string_len = len(vocab_display_string)
         # graphics.DrawText(self.double_buffer, font, 0, 32, textColor, vocab_display_string)
 
         xpos = 0
         counter = 0
+
+        now = datetime.datetime.now(pytz.timezone('US/Eastern'))
 
         while True:
             
@@ -158,18 +169,18 @@ class Driver():
             #     self.draw_temperatures()
             #     self.draw_weather()
 
-
-            blackout = Image.open('/home/alice/wmata/16x64_black.png').convert('RGB')
             self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
-            # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
-            counter += 1
-            if counter > 200:
-                xpos += 1
-            if (xpos > len(vocab_display_string) * font_width):
-                xpos = 0
-                counter = 0
-            graphics.DrawText(self.double_buffer, font, -xpos, 30, textColor, vocab_display_string) # lower left corner of char at (xpos, y)
-            graphics.DrawText(self.double_buffer, font, -xpos + (len(vocab_display_string) * font_width), 30, textColor, vocab_display_string) # lower left corner of char
+            if (now.hour in [6, 7, 8, 9]):
+                self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
+                # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
+                counter += 1
+                if counter > 200:
+                    xpos += 1
+                if (xpos > len(vocab_display_string) * font_width):
+                    xpos = 0
+                    counter = 0
+                graphics.DrawText(self.double_buffer, font, -xpos, 30, textColor, vocab_display_string) # lower left corner of char at (xpos, y)
+                graphics.DrawText(self.double_buffer, font, -xpos + (len(vocab_display_string) * font_width), 30, textColor, vocab_display_string) # lower left corner of char
 
             # self.double_buffer.SetImage(self.image, -xpos)
             # self.double_buffer.SetImage(self.image, -xpos + img_width)
@@ -177,6 +188,7 @@ class Driver():
 
             self.matrix.SwapOnVSync(self.double_buffer)
             schedule.run_pending()
+            # print(schedule.idle_seconds())
             time.sleep(0.03)
 
 
