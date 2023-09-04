@@ -15,13 +15,14 @@ import schedule
 class Driver():
 
     def __init__(self) -> None:
-        self.current_weather = weather.Weather()
+        self.driver_weather = weather.Weather()
         self.canvas_setup()
         self.vocab_setup()
         self.set_up_schedules()
     
     def set_up_schedules(self) -> None:
-        schedule.every().hour.do(self.current_weather.update_weather)
+        # TODO store today's weather and tomorrow's weather in separate vars?
+        schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
@@ -76,15 +77,22 @@ class Driver():
         word_index = random.randrange(0, len(self.vocab_list))
         self.word_of_day = self.vocab_list[word_index]
 
-    def draw_weather(self):
+
+    def draw_weather(self) -> str:
 
         print('Drawing weather!')
 
-        if self.current_weather.is_rain_above_percent(30):
+        if self.driver_weather.is_rain_above_percent(30):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
+            return 'rain'
+        # elif self.driver_weather.get_cloud_cover() > 40:
+        #     weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
         else:
             weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
+            return 'sun'
         self.double_buffer.SetImage(weather_image, 0, 0)
+
+
 
     def draw_temperatures(self):
 
@@ -99,14 +107,14 @@ class Driver():
         
         # draw high
         textColor = graphics.Color(255, 0, 0)
-        daily_high = driver.current_weather.get_daily_high_apparent_temp()
+        daily_high = driver.driver_weather.get_daily_apparent_temp_extrema.get('high')
         my_text = str(daily_high) + u'\u00B0'
         # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 8, textColor, my_text)
 
         # Draw low temperature
         textColor = graphics.Color(0, 0, 255)
-        daily_low = driver.current_weather.get_daily_low_apparent_temp()
+        daily_low = driver.driver_weather.get_daily_apparent_temp_extrema.get('low')
         my_text = str(daily_low) + u'\u00B0'
         # x = 20, y = 16, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
@@ -121,10 +129,11 @@ class Driver():
 
         # set buffer initially
         # otherwise won't update until the turn of the hour (for weather)
-        self.current_weather.update_weather()
+        self.driver_weather.update_weather()
         self.draw_temperatures()
         self.draw_weather()
         self.pick_random_word()
+        self.refresh_time()
         
         font = graphics.Font()
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
@@ -168,8 +177,7 @@ class Driver():
 if __name__ == "__main__":
     driver = Driver()
 
-    driver.current_weather.print_weather_dict()
-    driver.current_weather.get_daily_high_apparent_temp()
+    driver.driver_weather.print_weather_dict()
 
     try:
         print("Press CTRL-C to stop sample")
