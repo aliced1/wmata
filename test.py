@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-import multiprocessing
-import time
-import datetime
+
 import pytz
-import subprocess
-import csv
-import schedule
+from datetime import datetime, timedelta, date
+import pytz
+
 
 # def job():
 #     print("I'm working...")
@@ -20,8 +18,21 @@ if __name__ == "__main__":  # confirms that the code is under main function
     #     print(schedule.idle_seconds(), datetime.datetime.now(pytz.timezone('US/Eastern')))
     #     time.sleep(1) # wait one minute
 
-    now = datetime.datetime.now(pytz.timezone('US/Eastern'))
-    str_time = str(now.hour) + ':' + str(now.minute)
-    print(str_time == '19:49')
+    # now = datetime.datetime.now(pytz.timezone('US/Eastern'))
+    # str_time = str(now.hour) + ':' + str(now.minute)
+    # print(str_time == '19:49')
+
+    # today_at_6 = datetime.combine(datetime.date.fromtimestamp(datetime.now(pytz.timezone('US/Eastern')).timestamp()), datetime.min.time()) + timedelta(hours=18)
+
+    print(datetime.now(pytz.timezone('US/Eastern')).date())
+    
+    
+# insertion_date = dateutil.parser.parse('2018-03-13T17:22:20.065Z')
+# diffretiation = pytz.utc.localize(datetime.datetime.utcnow()) - insertion_date
+
+    # print(today_at_6)
+    # print(row_time)
+    # print(now_local)
+    # print(diffretiation)
 
     

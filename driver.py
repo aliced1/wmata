@@ -3,7 +3,6 @@ import sys
 import time
 import datetime
 import pytz
-import multiprocessing
 from rgbmatrix import graphics
 import rgbmatrix
 from samplebase import SampleBase
@@ -25,7 +24,8 @@ class Driver():
         schedule.every().hour.do(self.current_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
-        schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)    
+        schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
+        schedule.every(10).minutes.do(self.refresh_time)
 
     def canvas_setup(self) -> None:
 
@@ -69,6 +69,7 @@ class Driver():
 
     def pick_random_word(self) -> None:
 
+        # DEBUG
         print('Picking random word!')
 
         # pick a random word
@@ -87,6 +88,7 @@ class Driver():
 
     def draw_temperatures(self):
 
+        # DEBUG
         print('Drawing temps!')
 
         # Set up to draw high temperature
@@ -110,16 +112,8 @@ class Driver():
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
         my_text = str(999) + u'\u00B0'
 
-    # def periodic_refresh_tracker(self, shared_flag):
-    #     current_time = datetime.datetime.now(pytz.timezone('US/Eastern'))
-    #     hour = current_time.hour
-        
-    #     while True:
-    #         if current_time.hour != hour:
-    #             print('set flag to update weather!')
-    #             hour = current_time.hour
-    #             shared_flag.value = 1
-    #             time.sleep(60) # Use different sleep times for weather vs metro?
+    def refresh_time(self):
+        self.now = datetime.datetime.now(pytz.timezone('US/Eastern'))
 
 
     # @profile
@@ -131,46 +125,25 @@ class Driver():
         self.draw_temperatures()
         self.draw_weather()
         self.pick_random_word()
-
-        # spin off process to track timers with shared state variable "flag" 
-        # flag = multiprocessing.Value('i', 0)
-        # t1 = multiprocessing.Process(target=self.periodic_refresh_tracker, args=(flag,))
-        # t1.start()
-
-        # DEBUG
-        # print('buffer type = ', type(self.double_buffer))
-        # print(dir(double_buffer))s
         
         font = graphics.Font()
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
         font_width = 6
-        font_height = 13
         blackout = Image.open('/home/alice/wmata/16x64_black.png').convert('RGB')
         textColor = graphics.Color(172, 44, 210)
         vocab_display_string = self.word_of_day[0] + ' -- ' + self.word_of_day[1] + '     '
-        display_string_len = len(vocab_display_string)
         # graphics.DrawText(self.double_buffer, font, 0, 32, textColor, vocab_display_string)
 
         xpos = 0
         counter = 0
-
-        now = datetime.datetime.now(pytz.timezone('US/Eastern'))
 
         while True:
             
             # TODO add display for cloud cover, snow, wind, rain depth
             # After pulling new data, update images and buffer for loop
 
-            # only update buffer to draw weather and temp after we've pulled new weather data
-            # if flag.value == 1:
-            #     print('updating weather and buffer in main loop!')
-            #     flag.value = 0
-            #     self.current_weather.update_weather()
-            #     self.draw_temperatures()
-            #     self.draw_weather()
-
             self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
-            if (now.hour in [6, 7, 8, 9]):
+            if (self.now.hour in [6, 7, 8, 9]): # TODO only check hour on a schedule?
                 self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
                 # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
                 counter += 1
