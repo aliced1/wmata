@@ -81,16 +81,30 @@ class Driver():
     def draw_weather(self) -> str:
 
         print('Drawing weather!')
+        return_string = ''
 
+        # TODO add night
         if self.driver_weather.is_rain_above_percent(30):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
-            return 'rain'
-        # elif self.driver_weather.get_cloud_cover() > 40:
-        #     weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
+            return_string = 'rain'
+        elif self.driver_weather.is_snowing():
+            weather_image = Image.open('/home/alice/wmata/weather_images/snow.png').convert('RGB')
+            return_string = 'snow'
+        elif self.driver_weather.get_cloud_cover() > 40:
+            weather_image = Image.open('/home/alice/wmata/weather_images/cloudy.png').convert('RGB')
+            return_string = 'cloudy'
+        elif self.driver_weather.get_cloud_cover() < 40 and self.driver_weather.get_cloud_cover() > 20:
+            weather_image = Image.open('/home/alice/wmata/weather_images/partly_cloudy.png').convert('RGB')
+            return_string = 'partly_cloudy'
+        elif self.driver_weather.is_foggy():
+            weather_image = Image.open('/home/alice/wmata/weather_images/fog.png').convert('RGB')
+            return_string = 'fog'
         else:
             weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
-            return 'sun'
+            return_string = 'sun'
+        
         self.double_buffer.SetImage(weather_image, 0, 0)
+        return return_string
 
 
 
@@ -107,14 +121,14 @@ class Driver():
         
         # draw high
         textColor = graphics.Color(255, 0, 0)
-        daily_high = driver.driver_weather.get_daily_apparent_temp_extrema.get('high')
+        daily_high = driver.driver_weather.get_daily_apparent_temp_extrema().get('high')
         my_text = str(daily_high) + u'\u00B0'
         # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 8, textColor, my_text)
 
         # Draw low temperature
         textColor = graphics.Color(0, 0, 255)
-        daily_low = driver.driver_weather.get_daily_apparent_temp_extrema.get('low')
+        daily_low = driver.driver_weather.get_daily_apparent_temp_extrema().get('low')
         my_text = str(daily_low) + u'\u00B0'
         # x = 20, y = 16, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)

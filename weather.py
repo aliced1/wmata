@@ -12,21 +12,22 @@ import pickle
 class Weather():
     def __init__(self) -> None:
         self.weather_dict = self.update_weather()
+        pd.set_option('display.max_columns', 500)
         # print(json.dumps(weather_dict, indent=4))
 
     def update_weather(self) -> dict:
-        # response = requests.get((
-        # 'https://api.open-meteo.com/v1/forecast?latitude=38.8951&longitude=-77.0364'
-        # '&hourly=uv_index,is_day,cloudcover_low,cloudcover_mid,'
-        # 'apparent_temperature,precipitation_probability,precipitation,snowfall,'
-        # 'cloudcover,visibility,windspeed_10m,windgusts_10m&temperature_unit=fahrenheit'
-        # '&windspeed_unit=mph&precipitation_unit=inch&forecast_days=2'
-        # )).json()
-        # # print(json.dumps(response, indent=4))
+        response = requests.get((
+        'https://api.open-meteo.com/v1/forecast?latitude=38.8951&longitude=-77.0364'
+        '&hourly=uv_index,is_day,cloudcover_low,cloudcover_mid,'
+        'apparent_temperature,precipitation_probability,precipitation,snowfall,'
+        'cloudcover,visibility,windspeed_10m,windgusts_10m&temperature_unit=fahrenheit'
+        '&windspeed_unit=mph&precipitation_unit=inch&forecast_days=2'
+        )).json()
 
-        file = open('weather_dict_temp', 'rb')
-        response = pickle.load(file)
-        file.close()
+        # DEBUG - for testing without internet
+        # file = open('weather_dict_temp', 'rb')
+        # response = pickle.load(file)
+        # file.close()
 
         return response
 
@@ -85,5 +86,4 @@ if __name__ == "__main__":
     weather_instance = Weather()
     weather_instance.get_cloud_cover()
     weather_instance.print_weather_dict()
-    weather_instance.weather_dict = {}
             
