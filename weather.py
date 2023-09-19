@@ -86,31 +86,4 @@ if __name__ == "__main__":
     weather_instance.get_cloud_cover()
     weather_instance.print_weather_dict()
     weather_instance.weather_dict = {}
-
-    # now = datetime.now(pytz.timezone('US/Eastern'))
-
-    # if now.hour < 18:
-    #     weather_instance.get_weather_dict().get('hourly')[:18]
-    # else:
-    #     weather_instance.get_weather_dict().get('hourly')[18:18]
-
-#     row_time = pytz.timezone('US/Eastern').localize(dateutil.parser.parse(weather_instance.get_weather_dict().get('hourly').get('time')[26]))
-#     # now_local = datetime.now(pytz.timezone('US/Eastern'))
-#     today_at_6 = pytz.timezone('US/Eastern').localize(datetime.combine(datetime.now(pytz.timezone('US/Eastern')).date(), datetime.min.time()) + timedelta(hours=18))
-#     diffretiation = today_at_6 - row_time
-    
-    
-# # insertion_date = dateutil.parser.parse('2018-03-13T17:22:20.065Z')
-# # diffretiation = pytz.utc.localize(datetime.datetime.utcnow()) - insertion_date
-
-#     print(today_at_6)
-#     print(row_time)
-#     print(diffretiation)
-
-# if diffretiation.days>30:
-#     print "The insertion date is older than 30 days"
-
-# else:
-#     print "The insertion date is not older than 30 days"
-# #The insertion date is older than 30 days
             
