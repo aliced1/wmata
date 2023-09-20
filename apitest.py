@@ -25,3 +25,19 @@ for t in trainList:
 # print(json.dumps(response.json(), indent=4))
 
 
+
+
+# parameters={'LineCode':'GR'}
+# response = requests.get("https://api.wmata.com/Rail.svc/json/jStations?", headers=header.apiKey, params=parameters)
+# response = response.json()
+# # print(json.dumps(response, indent=4))
+
+# # json_print(response.get('Stations'))
+
+# station_names = []
+# for s in response.get('Stations'):
+#     station_names.append(s.get('Name'))
+
+# print(station_names)
+
+
