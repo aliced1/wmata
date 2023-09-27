@@ -45,6 +45,7 @@ class Weather():
     
     def print_weather_dict(self):
         df = pd.DataFrame.from_dict(self.weather_dict.get('hourly'))
+        print()
         print(df)
 
     def is_rain_above_percent(self, percent: int) -> bool:

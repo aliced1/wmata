@@ -190,7 +190,6 @@ class Driver():
 
 if __name__ == "__main__":
     driver = Driver()
-
     driver.driver_weather.print_weather_dict()
 
     try:
