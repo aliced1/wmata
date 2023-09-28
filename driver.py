@@ -11,11 +11,14 @@ import weather
 import csv
 import random
 import schedule
+import wmata
+import numpy as np
 
 class Driver():
 
     def __init__(self) -> None:
         self.driver_weather = weather.Weather()
+        self.driver_wmata = wmata.Wmata()
         self.canvas_setup()
         self.vocab_setup()
         self.set_up_schedules()
@@ -25,6 +28,7 @@ class Driver():
         schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
+        schedule.every(15).seconds.do(self.draw_train_time)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
 
@@ -84,6 +88,7 @@ class Driver():
         return_string = ''
 
         # TODO add night
+        # All images are 16x16 pixels
         if self.driver_weather.is_rain_above_percent(30):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
             return_string = 'rain'
@@ -103,10 +108,8 @@ class Driver():
             weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
             return_string = 'sun'
         
-        self.double_buffer.SetImage(weather_image, 0, 0)
+        self.double_buffer.SetImage(weather_image, 0, 0) # upper left corner of image
         return return_string
-
-
 
     def draw_temperatures(self):
 
@@ -122,20 +125,43 @@ class Driver():
         # draw high
         textColor = graphics.Color(255, 0, 0)
         daily_high = driver.driver_weather.get_daily_apparent_temp_extrema().get('high')
-        my_text = str(daily_high) + u'\u00B0'
+        temperature_string = str(daily_high) + u'\u00B0'
+        self.double_buffer.SetImage(self.black_image(10, 8), 20, 0)
         # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
-        graphics.DrawText(self.double_buffer, font, 20, 8, textColor, my_text)
+        graphics.DrawText(self.double_buffer, font, 20, 8, textColor, temperature_string)
 
         # Draw low temperature
         textColor = graphics.Color(0, 0, 255)
         daily_low = driver.driver_weather.get_daily_apparent_temp_extrema().get('low')
-        my_text = str(daily_low) + u'\u00B0'
+        temperature_string = str(daily_low) + u'\u00B0'
+        self.double_buffer.SetImage(self.black_image(10, 8), 20, 8)
         # x = 20, y = 16, pixels measured from upper left corner, but coordinates are for lower left corner of first character
-        graphics.DrawText(self.double_buffer, font, 20, 16, textColor, my_text)
+        graphics.DrawText(self.double_buffer, font, 20, 16, textColor, temperature_string)
         my_text = str(999) + u'\u00B0'
+
+    def black_image(self, width: int, height: int) -> Image:
+        # TODO check inputs
+        Canvas = np.full((width*3, height*3), 0)
+        return Image.fromarray(Canvas, 'RGB')
 
     def refresh_time(self):
         self.now = datetime.datetime.now(pytz.timezone('US/Eastern'))
+    
+    def draw_train_time(self):
+        # Set up to draw train time
+        font = graphics.Font()
+        textColor = graphics.Color(0, 255, 0)
+
+        # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        
+        # draw train time
+        incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
+        my_text = 'SV' + str(incoming_time)
+        # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
+        self.double_buffer.SetImage(self.black_image(25, 8), 40, 0)
+        graphics.DrawText(self.double_buffer, font, 40, 8, textColor, my_text)
+
 
 
     # @profile
@@ -148,6 +174,7 @@ class Driver():
         self.draw_weather()
         self.pick_random_word()
         self.refresh_time()
+        self.draw_train_time() # TODO make this generic - pass in arguments for station, line, direction
         
         font = graphics.Font()
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
@@ -190,7 +217,11 @@ class Driver():
 
 if __name__ == "__main__":
     driver = Driver()
-    driver.driver_weather.print_weather_dict()
+    # driver.driver_weather.print_weather_dict()
+    print()
+    print('train time:')
+    print(driver.driver_wmata.get_closest_train('D08', 'SV', 'west'))
+    print()
 
     try:
         print("Press CTRL-C to stop sample")
