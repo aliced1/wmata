@@ -4,7 +4,6 @@ import pytz
 import requests
 import json
 import pandas as pd
-import pickle
 
 # TODO add UV index, add cloudcover (low*0.7 + mid * 0.3) for p cloudy, add night vs day for sun/clear night and pcloudy day/pcloudy night, 
 # add heavy rain, add windy, 

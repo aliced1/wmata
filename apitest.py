@@ -1,5 +1,26 @@
+#!/usr/bin/env python3
 import requests
 import json
+# import png
+from PIL import Image
+import numpy as np
+
+# width = 30
+# height = 30
+# img = []
+# for y in range(height):
+#     row = (0 for x in range(0, width * 3))
+#     img.append(row)
+# with open('./gradient.png', 'wb') as f:
+#     w = png.Writer(width, height, greyscale=False)
+#     w.write(f, img)
+
+
+
+# Canvas = np.array([[[255, 0, 0], [0, 255, 0]], [[0, 0, 0], [0, 0, 0]]], dtype=np.uint8)
+canvas = np.full((16, 16), 0)
+img = Image.fromarray(canvas, 'RGB')
+img = img.save("./wmata/black.png")
 
 
 header = {'api_key':'b614f68d90a24f849b018c81e543704a'}
@@ -14,10 +35,10 @@ header = {'api_key':'b614f68d90a24f849b018c81e543704a'}
 
 
 # parameters={'StationCodes':'D07'}
-response = requests.get("https://api.wmata.com/StationPrediction.svc/json/GetPrediction/C02", headers=header)
-trainList = response.json().get("Trains")
-for t in trainList:
-	print(t.get("Line"), " ", t.get("Min"))
+# response = requests.get("https://api.wmata.com/StationPrediction.svc/json/GetPrediction/C02", headers=header)
+# trainList = response.json().get("Trains")
+# for t in trainList:
+# 	print(t.get("Line"), " ", t.get("Min"))
 
 # print(json.dumps(response.json(), indent=4))
 

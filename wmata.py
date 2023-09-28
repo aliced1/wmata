@@ -4,6 +4,11 @@ import json
 import header
 import pandas as pd
 
+        # Train format: {'Car': '8', 'Destination': 'Largo', 'DestinationCode': 'G05', 'DestinationName': 'Downtown Largo',
+        #  'Group': '1', 'Line': 'BL', 'LocationCode': 'C02', 'LocationName': 'McPherson Square', 'Min': 'BRD'}
+
+        # Line codes are RD - Red    YL - Yellow    GR - Green    BL - Blue    OR - Orange    SV - Silver
+
 class Wmata():
     def __init__(self) -> None:
         pd.set_option('display.max_columns', 500)
@@ -12,34 +17,43 @@ class Wmata():
     def json_print(self, response_json):
         print(json.dumps(response_json, indent=4))
 
-    def get_trains_for_station(self, station):
+    def get_trains_for_station(self, station: str) -> dict:
         """Check the incoming trains for a station
 
         Keyword arguments:
         station -- The WMATA station code as a str (e.g. 'C02')
         """
-
         # TODO check input
 
         request_string = 'https://api.wmata.com/StationPrediction.svc/json/GetPrediction/' + station
 
         response = requests.get(request_string, headers=header.apiKey)
-        trainList = response.json().get("Trains")
-        
-        # Train format: {'Car': '8', 'Destination': 'Largo', 'DestinationCode': 'G05', 'DestinationName': 'Downtown Largo',
-        #  'Group': '1', 'Line': 'BL', 'LocationCode': 'C02', 'LocationName': 'McPherson Square', 'Min': 'BRD'}
+        return response.json().get("Trains")
+   
 
-        # Line codes are RD - Red    YL - Yellow    GR - Green    BL - Blue    OR - Orange    SV - Silver
+    # line should be linecode, e.g. 'SV'
+    def get_closest_train(self, station: str, line: str, direction: str):
+        trainList = self.get_trains_for_station(station)
 
         for t in trainList:
-            print(t.get('Line'), ' ', t.get('Min'), ' ', t.get('DestinationName'))
-        # self.json_print(trainList)
+            if t.get('Line') != line: continue
+            
+            t_direction = self.calculate_train_direction(t.get('DestinationName'), t.get('Line'))
+            if t_direction != direction: continue
 
-        
-        
-    
-    def calculate_train_direction(self, stationName: str):
-        pass
+            return t.get('Min')
+            # print(t.get('Line'), ' ', t.get('Min'), ' ', t.get('DestinationName'), ' ', direction)
+            # if t.get('Line') == 'SV':
+
+
+    # 0 indicates west/south along the line relative to the center, 1 indicates east/north
+    def calculate_train_direction(self, stationName: str, line: str) -> str:
+        line = self.line_code_mappings.get(line) 
+        destination_index = line.get(stationName)
+        halfway_index = round(len(line)/2)
+        difference = halfway_index - destination_index
+        if difference < 0: return 'east'
+        else: return 'west'
 
     def init_stations_all_lines(self):
         silver_list = ['Ashburn', 'Loudoun Gateway', 'Washington Dulles International Airport', 'Innovation Center',
@@ -84,9 +98,12 @@ class Wmata():
         self.yellow = {yellow_list[i]: i for i in range(0, len(yellow_list))}
         self.green = {green_list[i]: i for i in range(0, len(green_list))}
 
+        self.line_code_mappings = {'RD':self.red, 'YL':self.yellow, 'GR':self.green, 'BL':self.blue, 'OR':self.orange, 'SV':self.silver}
+
 
 
 
 if __name__ == "__main__":
     wmata_instance = Wmata()
-    wmata_instance.get_trains_for_station('C02')
+    print(wmata_instance.get_closest_train('D08', 'SV', 'west'))
+    wmata_instance.json_print(wmata_instance.get_trains_for_station('D08'))
