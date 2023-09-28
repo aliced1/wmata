@@ -47,14 +47,14 @@ class Driver():
         options.parallel = 1
         options.row_address_type = 0
         options.multiplexing = 0
-        options.pwm_bits = 11
-        options.brightness = 30
+        options.pwm_bits = 10 #default 11
+        options.brightness = 50 # don't go lower than 30, I think. Max 100
         options.pwm_lsb_nanoseconds = 130
         options.led_rgb_sequence = "RGB"
         options.pixel_mapper_config = ""
         options.panel_type = ""
-        options.show_refresh_rate = 1
-        options.gpio_slowdown = 2
+        options.show_refresh_rate = 0 #default 1
+        options.gpio_slowdown = 2 # 2 or 3, 2 seems to work best
         options.disable_hardware_pulsing = False
         options.drop_privileges=False
         self.matrix = rgbmatrix.RGBMatrix(options = options)
@@ -80,7 +80,6 @@ class Driver():
         # pick a random word
         word_index = random.randrange(0, len(self.vocab_list))
         self.word_of_day = self.vocab_list[word_index]
-
 
     def draw_weather(self) -> str:
 
@@ -113,17 +112,13 @@ class Driver():
 
     def draw_temperatures(self):
 
-        # DEBUG
-        print('Drawing temps!')
-
         # Set up to draw high temperature
         font = graphics.Font()
-
         # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
         
         # draw high
-        textColor = graphics.Color(255, 0, 0)
+        textColor = graphics.Color(255, 30, 30)
         daily_high = driver.driver_weather.get_daily_apparent_temp_extrema().get('high')
         temperature_string = str(daily_high) + u'\u00B0'
         self.double_buffer.SetImage(self.black_image(10, 8), 20, 0)
@@ -131,7 +126,7 @@ class Driver():
         graphics.DrawText(self.double_buffer, font, 20, 8, textColor, temperature_string)
 
         # Draw low temperature
-        textColor = graphics.Color(0, 0, 255)
+        textColor = graphics.Color(128, 214, 242)
         daily_low = driver.driver_weather.get_daily_apparent_temp_extrema().get('low')
         temperature_string = str(daily_low) + u'\u00B0'
         self.double_buffer.SetImage(self.black_image(10, 8), 20, 8)
@@ -157,11 +152,19 @@ class Driver():
         
         # draw train time
         incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
-        my_text = 'SV' + str(incoming_time)
+        display_options = {'ARR':'Now', 'BRD':'NOW', None:'?'}
+        display_time = display_options.get(incoming_time, (str(incoming_time) + 'min'))
+        # if incoming_time == 'ARR':
+        #     display_time = 'Now'
+        # elif incoming_time == 'BRD':
+        #     display_time == 'NOW'
+        # else:
+        #     display_time = str(incoming_time) + 'min'
+        train_string = 'Leave'
         # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
-        self.double_buffer.SetImage(self.black_image(25, 8), 40, 0)
-        graphics.DrawText(self.double_buffer, font, 40, 8, textColor, my_text)
-
+        graphics.DrawText(self.double_buffer, font, 40, 8, textColor, train_string)
+        self.double_buffer.SetImage(self.black_image(25, 8), 40, 8)
+        graphics.DrawText(self.double_buffer, font, 40, 16, textColor, display_time)
 
 
     # @profile
