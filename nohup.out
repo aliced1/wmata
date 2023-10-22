@@ -1,0 +1,56 @@
+
+train time:
+4
+
+Press CTRL-C to stop sample
+Drawing weather!
+Picking random word!
+Drawing weather!
+Traceback (most recent call last):
+  File "/home/alice/wmata/./driver.py", line 231, in <module>
+    driver.draw_screen()
+  File "/home/alice/wmata/./driver.py", line 216, in draw_screen
+    schedule.run_pending()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 822, in run_pending
+    default_scheduler.run_pending()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 100, in run_pending
+    self._run_job(job)
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 172, in _run_job
+    ret = job.run()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 693, in run
+    ret = self.job_func()
+  File "/home/alice/wmata/./driver.py", line 154, in draw_train_time
+    incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
+  File "/home/alice/wmata/wmata.py", line 41, in get_closest_train
+    t_direction = self.calculate_train_direction(t.get('DestinationName'), t.get('Line'))
+  File "/home/alice/wmata/wmata.py", line 54, in calculate_train_direction
+    difference = halfway_index - destination_index
+TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'
+
+train time:
+2
+
+Press CTRL-C to stop sample
+Drawing weather!
+Picking random word!
+Drawing weather!
+Traceback (most recent call last):
+  File "/home/alice/wmata/./driver.py", line 231, in <module>
+    driver.draw_screen()
+  File "/home/alice/wmata/./driver.py", line 216, in draw_screen
+    schedule.run_pending()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 822, in run_pending
+    default_scheduler.run_pending()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 100, in run_pending
+    self._run_job(job)
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 172, in _run_job
+    ret = job.run()
+  File "/usr/local/lib/python3.9/dist-packages/schedule/__init__.py", line 693, in run
+    ret = self.job_func()
+  File "/home/alice/wmata/./driver.py", line 154, in draw_train_time
+    incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
+  File "/home/alice/wmata/wmata.py", line 41, in get_closest_train
+    t_direction = self.calculate_train_direction(t.get('DestinationName'), t.get('Line'))
+  File "/home/alice/wmata/wmata.py", line 54, in calculate_train_direction
+    difference = halfway_index - destination_index
+TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'

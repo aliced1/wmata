@@ -196,7 +196,8 @@ class Driver():
             # After pulling new data, update images and buffer for loop
 
             self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
-            if (self.now.hour in [6, 7, 8, 9]): # TODO only check hour on a schedule?
+            
+            if (self.now.hour > 6 and self.now.hour < 9): # TODO only check hour on a schedule?
                 self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
                 # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
                 counter += 1
