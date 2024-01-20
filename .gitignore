@@ -1,4 +1,4 @@
 apitest.py
 header.py
-__pycache__
+__pycache__/
 .vscode
