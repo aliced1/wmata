@@ -7,16 +7,21 @@ Displays today's weather or tomorrow's weather depending on the time of day, and
 
 ## Installation
 In your project directory, run curl to grab the rgb matrix installation script, according to Adafruit's guide [here](). This should create a folder called `adafruit_rgb_library` with the required library
+
 `curl https://raw.githubusercontent.com/adafruit/Raspberry-Pi-Installer-Scripts/main/rgb-matrix.sh >rgb-matrix.sh`
+
 `sudo bash rgb-matrix.sh`
 
 Install pip
+
 `sudo apt-get pip`
 
 Install the following packages using pip
+
 `sudo pip install pytz`
 `sudo pip install pandas`
 `sudo pip install schedule`
 
 Run the script using
+
 `sudo python driver.py`
