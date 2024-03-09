@@ -84,9 +84,12 @@ class Weather():
     def is_snowing(self) -> bool:
         return max(self.get_weather_dict().get('snowfall')) > 0.25
 
+    def uv_index_list(self) -> list:
+        return self.get_weather_dict().get('uv_index')
+
 
 if __name__ == "__main__":
     weather_instance = Weather()
-    weather_instance.get_cloud_cover()
+    weather_instance.uv_index_list()
     # weather_instance.print_weather_dict()
             

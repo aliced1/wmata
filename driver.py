@@ -13,6 +13,7 @@ import random
 import schedule
 import wmata
 import numpy as np
+import math
 
 class Driver():
 
@@ -121,8 +122,9 @@ class Driver():
         textColor = graphics.Color(255, 30, 30)
         daily_high = driver.driver_weather.get_daily_apparent_temp_extrema().get('high')
         temperature_string = str(daily_high) + u'\u00B0'
+        # SetImage coordinates are the upper left coordinate of the image 
         self.double_buffer.SetImage(self.black_image(10, 8), 20, 0)
-        # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
+        # x = 20, y = 8, coordinates for DrawText are the lower left corner of the first character
         graphics.DrawText(self.double_buffer, font, 20, 8, textColor, temperature_string)
 
         # Draw low temperature
@@ -132,7 +134,6 @@ class Driver():
         self.double_buffer.SetImage(self.black_image(10, 8), 20, 8)
         # x = 20, y = 16, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, temperature_string)
-        my_text = str(999) + u'\u00B0'
 
     def black_image(self, width: int, height: int) -> Image:
         # TODO check inputs
@@ -154,17 +155,35 @@ class Driver():
         incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
         display_options = {'ARR':'Now', 'BRD':'NOW', None:'?'}
         display_time = display_options.get(incoming_time, (str(incoming_time) + 'min'))
-        # if incoming_time == 'ARR':
-        #     display_time = 'Now'
-        # elif incoming_time == 'BRD':
-        #     display_time == 'NOW'
-        # else:
-        #     display_time = str(incoming_time) + 'min'
         train_string = 'Leave'
-        # x = 20, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
+        # x = 40, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 40, 8, textColor, train_string)
         self.double_buffer.SetImage(self.black_image(25, 8), 40, 8)
         graphics.DrawText(self.double_buffer, font, 40, 16, textColor, display_time)
+    
+    def draw_uv_index(self):
+        uv_index_colors = [[0,255,0], [85,85,0], [170,170,0], [255,255,0], [255,220,0], [255,185,0], [255,150,0], [255,75,0], [255,0,0], [255,0,85], [255,0,170], [255,0,255]]
+
+        # Set up to draw train time
+        font = graphics.Font()
+
+        # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+
+        # Draw 'UV' on screen
+        # draw a black box of size 15 across, 8 high, starting at x = 0, y = 16, measured from top left corner of screen to top left corner of black box
+        self.double_buffer.SetImage(self.black_image(15, 8), 0, 16)
+        # draw three characters, width 5*3 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to bottom left corner of text
+        graphics.DrawText(self.double_buffer, font, 0, 24, graphics.Color(255, 255, 255), 'UV:')
+        
+        
+        # Draw UV index with color according to UV Index Scale
+        uv_index = self.driver_weather.uv_index_list()[self.now.hour]
+        uv_index = int(math.ceil(uv_index))
+        uv_color = uv_index_colors[uv_index]
+        self.double_buffer.SetImage(self.black_image(10, 8), 15, 16)
+        graphics.DrawText(self.double_buffer, font, 15, 24, graphics.Color(uv_color[0],uv_color[1],uv_color[2]), str(uv_index))
+
 
 
     # @profile
@@ -178,7 +197,9 @@ class Driver():
         self.pick_random_word()
         self.refresh_time()
         self.draw_train_time() # TODO make this generic - pass in arguments for station, line, direction
+        self.draw_uv_index()
         
+        # Set up fonts, text color, and display string for the word of the day
         font = graphics.Font()
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
         font_width = 6
@@ -190,12 +211,12 @@ class Driver():
         xpos = 0
         counter = 0
 
+
+
         while True:
             
             # TODO add display for cloud cover, snow, wind, rain depth
             # After pulling new data, update images and buffer for loop
-
-            self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
             
             if (self.now.hour > 6 and self.now.hour < 9): # TODO only check hour on a schedule?
                 self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
