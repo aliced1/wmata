@@ -29,6 +29,7 @@ class Driver():
         schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
+        schedule.every().hour.do(self.draw_uv_index)
         schedule.every(15).seconds.do(self.draw_train_time)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
@@ -190,7 +191,7 @@ class Driver():
     def draw_screen(self):
 
         # set buffer initially
-        # otherwise won't update until the turn of the hour (for weather)
+        # otherwise won't update until the turn of the hour
         self.driver_weather.update_weather()
         self.draw_temperatures()
         self.draw_weather()
@@ -218,7 +219,7 @@ class Driver():
             # TODO add display for cloud cover, snow, wind, rain depth
             # After pulling new data, update images and buffer for loop
             
-            if (self.now.hour > 6 and self.now.hour < 9): # TODO only check hour on a schedule?
+            if (self.now.hour > 6 and self.now.hour < 9):
                 self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
                 # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
                 counter += 1
