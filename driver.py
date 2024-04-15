@@ -31,6 +31,7 @@ class Driver():
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
         schedule.every().hour.do(self.draw_uv_index)
+        schedule.every().hour.do(self.draw_current_temperature)
         schedule.every(15).seconds.do(self.draw_train_time)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
