@@ -23,6 +23,7 @@ class Driver():
         self.canvas_setup()
         self.vocab_setup()
         self.set_up_schedules()
+        self.refresh_time()
     
     def set_up_schedules(self) -> None:
         # TODO store today's weather and tomorrow's weather in separate vars?
@@ -248,6 +249,9 @@ if __name__ == "__main__":
     print('train time:')
     print(driver.driver_wmata.get_closest_train('D08', 'SV', 'west'))
     print()
+
+    if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
+        sys.exit(0)
 
     try:
         print("Press CTRL-C to stop sample")
