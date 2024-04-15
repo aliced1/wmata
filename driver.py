@@ -117,12 +117,13 @@ class Driver():
 
         # Set up to draw high temperature
         font = graphics.Font()
-        # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
+        # Letters are 5x8 pixels high, color red
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
         
         # draw high
         textColor = graphics.Color(255, 30, 30)
         daily_high = driver.driver_weather.get_daily_apparent_temp_extrema().get('high')
+        # Append degree symbol
         temperature_string = str(daily_high) + u'\u00B0'
         # SetImage coordinates are the upper left coordinate of the image 
         self.double_buffer.SetImage(self.black_image(10, 8), 20, 0)
@@ -166,10 +167,10 @@ class Driver():
     def draw_uv_index(self):
         uv_index_colors = [[0,255,0], [85,85,0], [170,170,0], [255,255,0], [255,220,0], [255,185,0], [255,150,0], [255,75,0], [255,0,0], [255,0,85], [255,0,170], [255,0,255]]
 
-        # Set up to draw train time
+        # Set up to draw UV index
         font = graphics.Font()
 
-        # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
+        # Letters are 5x8 pixels high
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
 
         # Draw 'UV' on screen
@@ -178,13 +179,34 @@ class Driver():
         # draw three characters, width 5*3 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to bottom left corner of text
         graphics.DrawText(self.double_buffer, font, 0, 24, graphics.Color(255, 255, 255), 'UV:')
         
-        
         # Draw UV index with color according to UV Index Scale
         uv_index = self.driver_weather.uv_index_list()[self.now.hour]
         uv_index = int(math.ceil(uv_index))
         uv_color = uv_index_colors[uv_index]
         self.double_buffer.SetImage(self.black_image(10, 8), 15, 16)
         graphics.DrawText(self.double_buffer, font, 15, 24, graphics.Color(uv_color[0],uv_color[1],uv_color[2]), str(uv_index))
+    
+    def draw_current_temperature(self):
+        current_temp_colors = {110:[255,0,0],105:[255,0,32],100:[255,0,64],95:[255,0,96],90:[255,0,128],
+                               85:[255,0,159],80:[255,0,191],75:[255,0,223],70:[255,0,255],65:[227,0,255],
+                               60:[198,0,255],55:[170,0,255],50:[142,0,255],45:[113,0,255],40:[85,0,255],
+                               35:[57,0,255],30:[28,0,255],25:[0,0,255]}
+        
+        current_temp = self.driver_weather.get_current_temperature()
+        closest_key_temp = min(current_temp_colors.keys(), key=lambda x:abs(x - current_temp))
+        color_list = current_temp_colors.get(closest_key_temp)
+        font = graphics.Font()
+
+        # Letters are 5x8 pixels high
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+
+        # Draw current temp
+        # draw a black box of size 20 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to top left corner of black box
+        self.double_buffer.SetImage(self.black_image(20,8), 0, 24)
+        # draw three or four characters (depending on whether temperature is 3 digits)
+        # width 5*3 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to bottom left corner of text
+        current_temperature_string = str(round(current_temp)) + u'\u00B0'
+        graphics.DrawText(self.double_buffer, font, 0, 32, graphics.Color(color_list[0],color_list[1],color_list[2]), current_temperature_string)
 
 
 
@@ -200,6 +222,7 @@ class Driver():
         self.refresh_time()
         self.draw_train_time() # TODO make this generic - pass in arguments for station, line, direction
         self.draw_uv_index()
+        self.draw_current_temperature()
         
         # Set up fonts, text color, and display string for the word of the day
         font = graphics.Font()
@@ -219,6 +242,9 @@ class Driver():
             
             # TODO add display for cloud cover, snow, wind, rain depth
             # After pulling new data, update images and buffer for loop
+
+            if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
+                sys.exit(0)
             
             if (self.now.hour > 6 and self.now.hour < 9):
                 self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
@@ -245,13 +271,10 @@ class Driver():
 if __name__ == "__main__":
     driver = Driver()
     # driver.driver_weather.print_weather_dict()
-    print()
-    print('train time:')
-    print(driver.driver_wmata.get_closest_train('D08', 'SV', 'west'))
-    print()
-
-    if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
-        sys.exit(0)
+    # print()
+    # print('train time:')
+    # print(driver.driver_wmata.get_closest_train('D08', 'SV', 'west'))
+    # print()
 
     try:
         print("Press CTRL-C to stop sample")

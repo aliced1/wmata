@@ -20,7 +20,7 @@ class Weather():
         '&hourly=uv_index,is_day,cloudcover_low,cloudcover_mid,'
         'apparent_temperature,precipitation_probability,precipitation,snowfall,'
         'cloudcover,visibility,windspeed_10m,windgusts_10m&temperature_unit=fahrenheit'
-        '&windspeed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=1'
+        '&windspeed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&current=apparent_temperature&forecast_days=1'
         )).json()
 
         # DEBUG - for testing without internet
@@ -57,7 +57,7 @@ class Weather():
         return (max(rain_probabilities_list) >= percent)
     
 
-    def get_daily_apparent_temp_extrema(self):
+    def get_daily_apparent_temp_extrema(self) -> dict:
         high = round(max(self.get_weather_dict().get('apparent_temperature')))
         low = round(min(self.get_weather_dict().get('apparent_temperature')))
         return {'high' : high, 'low' : low}
@@ -79,6 +79,10 @@ class Weather():
 
     def uv_index_list(self) -> list:
         return self.get_weather_dict().get('uv_index')
+    
+    def get_current_temperature(self) -> float:
+        current_hour = datetime.datetime.now(pytz.timezone('US/Eastern')).hour
+        return self.get_weather_dict().get('apparent_temperature')[current_hour]
 
 
 if __name__ == "__main__":
@@ -87,4 +91,5 @@ if __name__ == "__main__":
     print(weather_instance.get_weather_dict().get('time'))
     print(datetime.datetime.now(pytz.timezone('US/Eastern')).hour)
     # weather_instance.print_weather_dict()
+    # print(weather_instance.get_weather_dict())
             
