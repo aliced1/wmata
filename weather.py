@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from datetime import datetime
+import datetime
 import pytz
 import requests
 import json
@@ -20,7 +20,7 @@ class Weather():
         '&hourly=uv_index,is_day,cloudcover_low,cloudcover_mid,'
         'apparent_temperature,precipitation_probability,precipitation,snowfall,'
         'cloudcover,visibility,windspeed_10m,windgusts_10m&temperature_unit=fahrenheit'
-        '&windspeed_unit=mph&precipitation_unit=inch&past_days=1&forecast_days=1'
+        '&windspeed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&forecast_days=1'
         )).json()
 
         # DEBUG - for testing without internet
@@ -36,17 +36,10 @@ class Weather():
 #            'snowfall', 'cloudcover', 'visibility', 'windspeed_10m', 'windgusts_10m'])
     def get_weather_dict(self) -> dict:
 
-        # return current day if 5PM or earlier, else return tomorrow
-        current_time = datetime.now(pytz.timezone('US/Eastern'))
-
         hourly = self.weather_dict.get('hourly').copy()
-        if current_time.hour <= 17:
-            for k in hourly.keys():
-                hourly.update({k:hourly.get(k)[:23]})
-        
-        elif current_time.hour > 17:
-            for k in hourly.keys():
-                hourly.update({k:hourly.get(k)[24:]})
+        for k in hourly.keys():
+            hourly.update({k:hourly.get(k)[:23]})
+
         
         # df = pd.DataFrame.from_dict(hourly)
         # print()
@@ -90,6 +83,8 @@ class Weather():
 
 if __name__ == "__main__":
     weather_instance = Weather()
-    weather_instance.uv_index_list()
+    print(weather_instance.uv_index_list())
+    print(weather_instance.get_weather_dict().get('time'))
+    print(datetime.datetime.now(pytz.timezone('US/Eastern')).hour)
     # weather_instance.print_weather_dict()
             
