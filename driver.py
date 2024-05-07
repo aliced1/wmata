@@ -25,8 +25,9 @@ class Driver():
         self.set_up_schedules()
         self.refresh_time()
     
+
+
     def set_up_schedules(self) -> None:
-        # TODO store today's weather and tomorrow's weather in separate vars?
         schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
@@ -35,6 +36,8 @@ class Driver():
         schedule.every(15).seconds.do(self.draw_train_time)
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
+
+
 
     def canvas_setup(self) -> None:
 
@@ -76,6 +79,8 @@ class Driver():
         
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)    
 
+
+
     def pick_random_word(self) -> None:
 
         # DEBUG
@@ -84,6 +89,8 @@ class Driver():
         # pick a random word
         word_index = random.randrange(0, len(self.vocab_list))
         self.word_of_day = self.vocab_list[word_index]
+
+
 
     def draw_weather(self) -> str:
 
@@ -114,6 +121,8 @@ class Driver():
         self.double_buffer.SetImage(weather_image, 0, 0) # upper left corner of image
         return return_string
 
+
+
     def draw_temperatures(self):
 
         # Set up to draw high temperature
@@ -139,15 +148,21 @@ class Driver():
         # x = 20, y = 16, pixels measured from upper left corner, but coordinates are for lower left corner of first character
         graphics.DrawText(self.double_buffer, font, 20, 16, textColor, temperature_string)
 
+
+
     def black_image(self, width: int, height: int) -> Image:
         # TODO check inputs
 
         full_array = np.full((height, width), 0)
         return Image.fromarray(full_array, 'RGB')
 
+
+
     def refresh_time(self):
         self.now = datetime.datetime.now(pytz.timezone('US/Eastern'))
     
+
+
     def draw_train_time(self):
         # Set up to draw train time
         font = graphics.Font()
@@ -166,6 +181,8 @@ class Driver():
         self.double_buffer.SetImage(self.black_image(25, 8), 40, 8)
         graphics.DrawText(self.double_buffer, font, 40, 16, textColor, display_time)
     
+
+
     def draw_uv_index(self, x: int, y: int) -> None:
         """Draws the current UV index. Color will change according to a mapping between 0 and 11.
         Temperature will be drawn at x and y coordinates provided, measured from the top left corner of the screen.
@@ -196,6 +213,8 @@ class Driver():
         self.double_buffer.SetImage(self.black_image(10, 8), x + 15, y)
         graphics.DrawText(self.double_buffer, font, x + 15, y + 8, graphics.Color(uv_color[0],uv_color[1],uv_color[2]), str(uv_index))
     
+
+
     def draw_current_temperature(self, x: int, y: int) -> None:
         """Draws the current apparent temperature (heat index) in Fahrenheit. Color will change according to a mapping between 25 degrees and 110 degrees.
         Temperature will be drawn at x and y coordinates provided, measured from the top left corner of the screen.
@@ -228,6 +247,8 @@ class Driver():
         # Add 8 to y value because text is drawn from the bottom left corner and character height is 8
         current_temperature_string = str(round(current_temp)) + u'\u00B0'
         graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(color_list[0],color_list[1],color_list[2]), current_temperature_string)
+
+
 
     def draw_text(self, x: int, y: int, text: str, r: int = 255, g: int = 255, b: int = 255) -> None:
         """Draws generic text at the coordinates specified. x and y coordinates should be the location of the upper left

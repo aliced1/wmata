@@ -23,11 +23,6 @@ class Weather():
         '&windspeed_unit=mph&precipitation_unit=inch&timezone=America%2FNew_York&current=apparent_temperature&forecast_days=1'
         )).json()
 
-        # DEBUG - for testing without internet
-        # file = open('weather_dict_temp', 'rb')
-        # response = pickle.load(file)
-        # file.close()
-
         return response
 
 
@@ -40,17 +35,14 @@ class Weather():
         for k in hourly.keys():
             hourly.update({k:hourly.get(k)[:23]})
 
-        
-        # df = pd.DataFrame.from_dict(hourly)
-        # print()
-        # print(df)
-
         return hourly
     
+
     def print_weather_dict(self):
         df = pd.DataFrame.from_dict(self.weather_dict.get('hourly'))
         print()
         print(df)
+
 
     def is_rain_above_percent(self, percent: int) -> bool:
         rain_probabilities_list = self.get_weather_dict().get('precipitation_probability')
