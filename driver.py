@@ -141,8 +141,9 @@ class Driver():
 
     def black_image(self, width: int, height: int) -> Image:
         # TODO check inputs
-        Canvas = np.full((width*3, height*3), 0)
-        return Image.fromarray(Canvas, 'RGB')
+
+        full_array = np.full((height, width), 0)
+        return Image.fromarray(full_array, 'RGB')
 
     def refresh_time(self):
         self.now = datetime.datetime.now(pytz.timezone('US/Eastern'))
@@ -165,7 +166,15 @@ class Driver():
         self.double_buffer.SetImage(self.black_image(25, 8), 40, 8)
         graphics.DrawText(self.double_buffer, font, 40, 16, textColor, display_time)
     
-    def draw_uv_index(self):
+    def draw_uv_index(self, x: int, y: int) -> None:
+        """Draws the current UV index. Color will change according to a mapping between 0 and 11.
+        Temperature will be drawn at x and y coordinates provided, measured from the top left corner of the screen.
+        Footprint is 25 width, 8 height.
+
+        Args:
+            x (int): x coordinate (horizontal distance to upper left starting pixel, exclusive)
+            y (int): y coordinate (vertical distance to upper left starting pixel, exclusive)
+        """
         uv_index_colors = [[0,255,0], [85,85,0], [170,170,0], [255,255,0], [255,220,0], [255,185,0], [255,150,0], [255,75,0], [255,0,0], [255,0,85], [255,0,170], [255,0,255]]
 
         # Set up to draw UV index
@@ -175,19 +184,28 @@ class Driver():
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
 
         # Draw 'UV' on screen
-        # draw a black box of size 15 across, 8 high, starting at x = 0, y = 16, measured from top left corner of screen to top left corner of black box
-        self.double_buffer.SetImage(self.black_image(15, 8), 0, 16)
-        # draw three characters, width 5*3 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to bottom left corner of text
-        graphics.DrawText(self.double_buffer, font, 0, 24, graphics.Color(255, 255, 255), 'UV:')
+        # draw a black box of size 15 across, 8 high, starting at x, y, measured from top left corner of screen to TOP left corner of black box
+        self.double_buffer.SetImage(self.black_image(15, 8), x, y)
+        # draw three characters, width 5*3 across, 8 high, starting at x, y, measured from top left corner of screen to BOTTOM left corner of text
+        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(255, 255, 255), 'UV:')
         
         # Draw UV index with color according to UV Index Scale
         uv_index = self.driver_weather.uv_index_list()[self.now.hour]
         uv_index = int(math.ceil(uv_index))
         uv_color = uv_index_colors[uv_index]
-        self.double_buffer.SetImage(self.black_image(10, 8), 15, 16)
-        graphics.DrawText(self.double_buffer, font, 15, 24, graphics.Color(uv_color[0],uv_color[1],uv_color[2]), str(uv_index))
+        self.double_buffer.SetImage(self.black_image(10, 8), x + 15, y)
+        graphics.DrawText(self.double_buffer, font, x + 15, y + 8, graphics.Color(uv_color[0],uv_color[1],uv_color[2]), str(uv_index))
     
-    def draw_current_temperature(self):
+    def draw_current_temperature(self, x: int, y: int) -> None:
+        """Draws the current apparent temperature (heat index) in Fahrenheit. Color will change according to a mapping between 25 degrees and 110 degrees.
+        Temperature will be drawn at x and y coordinates provided, measured from the top left corner of the screen.
+        Footprint is 20 width, 8 height.
+
+        Args:
+            x (int): x coordinate (horizontal distance to upper left starting pixel, exclusive)
+            y (int): y coordinate (vertical distance to upper left starting pixel, exclusive)
+        """
+
         current_temp_colors = {110:[255,0,0],105:[255,0,32],100:[255,0,64],95:[255,0,96],90:[255,0,128],
                                85:[255,0,159],80:[255,0,191],75:[255,0,223],70:[255,0,255],65:[227,0,255],
                                60:[198,0,255],55:[170,0,255],50:[142,0,255],45:[113,0,255],40:[85,0,255],
@@ -202,13 +220,46 @@ class Driver():
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
 
         # Draw current temp
-        # draw a black box of size 20 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to top left corner of black box
-        self.double_buffer.SetImage(self.black_image(20,8), 0, 24)
-        # draw three or four characters (depending on whether temperature is 3 digits)
-        # width 5*3 across, 8 high, starting at x = 0, y = 24, measured from top left corner of screen to bottom left corner of text
-        current_temperature_string = str(round(current_temp)) + u'\u00B0'
-        graphics.DrawText(self.double_buffer, font, 0, 32, graphics.Color(color_list[0],color_list[1],color_list[2]), current_temperature_string)
+        # draw a black box of size 20 across, 8 high, measured from top left corner of screen to TOP left corner of black box
+        self.double_buffer.SetImage(self.black_image(20,8), x, y)
 
+        # draw three or four characters (depending on whether temperature is 3 digits)
+        # width 5*(3 or 4) across, 8 high, starting at x and y provided, measured from top left corner of screen to BOTTOM left corner of text
+        # Add 8 to y value because text is drawn from the bottom left corner and character height is 8
+        current_temperature_string = str(round(current_temp)) + u'\u00B0'
+        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(color_list[0],color_list[1],color_list[2]), current_temperature_string)
+
+    def draw_text(self, x: int, y: int, text: str, r: int = 255, g: int = 255, b: int = 255) -> None:
+        """Draws generic text at the coordinates specified. x and y coordinates should be the location of the upper left
+        corner of the desired text. r, g, b are 8-bit color values between 0 and 255. Default is 255, 255, 255 (white)
+
+        Args:
+            x (int): x coordinate
+            y (int): y coordinate
+            text (str): text to draw
+            r (int, optional): Red color value. Defaults to 255.
+            g (int, optional): Green color value. Defaults to 255.
+            b (int, optional): Blue color value. Defaults to 255.
+
+        Returns:
+            _type_: None
+        """
+
+        if len(text) == 0: return None
+
+        font = graphics.Font()
+
+        print('LENGTH = {}'.format(len(text)))
+
+        # Letters are 5x8 pixels high
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+
+        # draw a black box, location measured from top left corner of screen to TOP left corner of black box
+        self.double_buffer.SetImage(self.black_image(5 * len(text), 8), x, y)
+
+        # text starts at x and y provided, measured from top left corner of screen to BOTTOM left corner of text
+        # Add 8 to y value because text is drawn from the bottom left corner and character height is 8
+        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(r, g, b), text)
 
 
     # @profile
@@ -222,8 +273,10 @@ class Driver():
         self.pick_random_word()
         self.refresh_time()
         self.draw_train_time() # TODO make this generic - pass in arguments for station, line, direction
-        self.draw_uv_index()
-        self.draw_current_temperature()
+        self.draw_uv_index(20, 16)
+        self.draw_current_temperature(20, 24)
+        self.draw_text(0, 20, 'Now:', 255, 255, 102)
+        
         
         # Set up fonts, text color, and display string for the word of the day
         font = graphics.Font()
