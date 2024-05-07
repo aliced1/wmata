@@ -15,6 +15,9 @@ import wmata
 import numpy as np
 import math
 
+# TODO add guard clauses and exceptions
+# TODO add docstrings to all functions
+
 class Driver():
 
     def __init__(self) -> None:
@@ -31,9 +34,9 @@ class Driver():
         schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
-        schedule.every().hour.do(self.draw_uv_index)
-        schedule.every().hour.do(self.draw_current_temperature)
-        schedule.every(15).seconds.do(self.draw_train_time)
+        schedule.every().hour.do(self.draw_uv_index, 20, 16)
+        schedule.every().hour.do(self.draw_current_temperature, 20, 24)
+        schedule.every(15).seconds.do(self.draw_train_time, 40, 0, [0, 255, 0], 'D08', 'SV', 'west')
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
 
@@ -68,6 +71,8 @@ class Driver():
         
         self.double_buffer = self.matrix.CreateFrameCanvas()
 
+
+
     def vocab_setup(self) -> None:
         my_file = open('vocab.csv', 'r')
         reader = csv.reader(my_file)
@@ -82,45 +87,30 @@ class Driver():
 
 
     def pick_random_word(self) -> None:
-
-        # DEBUG
-        print('Picking random word!')
-
         # pick a random word
         word_index = random.randrange(0, len(self.vocab_list))
         self.word_of_day = self.vocab_list[word_index]
 
 
 
-    def draw_weather(self) -> str:
-
-        print('Drawing weather!')
-        return_string = ''
+    def draw_weather(self) -> None:
 
         # TODO add night
         # All images are 16x16 pixels
         if self.driver_weather.is_rain_above_percent(30):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
-            return_string = 'rain'
         elif self.driver_weather.is_snowing():
             weather_image = Image.open('/home/alice/wmata/weather_images/snow.png').convert('RGB')
-            return_string = 'snow'
         elif self.driver_weather.get_cloud_cover() > 40:
             weather_image = Image.open('/home/alice/wmata/weather_images/cloudy.png').convert('RGB')
-            return_string = 'cloudy'
         elif self.driver_weather.get_cloud_cover() < 40 and self.driver_weather.get_cloud_cover() > 20:
             weather_image = Image.open('/home/alice/wmata/weather_images/partly_cloudy.png').convert('RGB')
-            return_string = 'partly_cloudy'
         elif self.driver_weather.is_foggy():
             weather_image = Image.open('/home/alice/wmata/weather_images/fog.png').convert('RGB')
-            return_string = 'fog'
         else:
             weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
-            return_string = 'sun'
         
         self.double_buffer.SetImage(weather_image, 0, 0) # upper left corner of image
-        return return_string
-
 
 
     def draw_temperatures(self):
@@ -151,8 +141,6 @@ class Driver():
 
 
     def black_image(self, width: int, height: int) -> Image:
-        # TODO check inputs
-
         full_array = np.full((height, width), 0)
         return Image.fromarray(full_array, 'RGB')
 
@@ -163,23 +151,44 @@ class Driver():
     
 
 
-    def draw_train_time(self):
+    def draw_train_time(self, x: int = 40, y: int = 0, rgb: list[int] = [0, 255, 0], station: str = '', line: str = '', direction: str = '') -> None:
+        """Draws the train time as 'Leave' on one line (5 characters), then 'xxmin' on the following line, where 'xx' is the time in minutes.
+
+        Args:
+            x (int, optional): x coordinate of upper left pixel. Defaults to 40.
+            y (int, optional): y coordinate of upper left pixel. Defaults to 0.
+            rgb (list[int], optional): . Defaults to [0, 255, 0].
+            station (str, optional): _description_. Defaults to ''.
+            line (str, optional): _description_. Defaults to ''.
+            direction (str, optional): _description_. Defaults to ''.
+
+        Raises:
+            ValueError: Invalid station, line, or direction argument.
+        """
+
+
+        if (not station or not line or not direction): raise ValueError('Invalid station, line, or direction argument.')
+
         # Set up to draw train time
         font = graphics.Font()
-        textColor = graphics.Color(0, 255, 0)
 
         # Letters are 5x8 pixels high, color red, append degree symbol and add to buffer
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
         
         # draw train time
-        incoming_time = self.driver_wmata.get_closest_train('D08', 'SV', 'west')
+        incoming_time = self.driver_wmata.get_closest_train(station, line, direction)
         display_options = {'ARR':'Now', 'BRD':'NOW', None:'?'}
-        display_time = display_options.get(incoming_time, (str(incoming_time) + 'min'))
+        display_time = display_options.get(incoming_time, (str(incoming_time) + 'min')) # if the incoming time reported from the API isn't 'ARR', 'BRD', or None, display_time is the time in minutes + 'min'
         train_string = 'Leave'
-        # x = 40, y = 8, pixels measured from upper left corner, but coordinates are for lower left corner of first character
-        graphics.DrawText(self.double_buffer, font, 40, 8, textColor, train_string)
-        self.double_buffer.SetImage(self.black_image(25, 8), 40, 8)
-        graphics.DrawText(self.double_buffer, font, 40, 16, textColor, display_time)
+
+        # draw a black image of size 25 x 16 at x and y coordinates, measured from upper left corner of display to TOP left corner of image
+        self.double_buffer.SetImage(self.black_image(25, 16), x, y)
+
+        # draw 'Leave' - pixels measured from upper left corner, coordinates are for BOTTOM left corner of first character
+        graphics.DrawText(self.double_buffer, font, x, 8, graphics.Color(0, 255, 0), train_string)
+
+        # draw 'Leave' - pixels measured from upper left corner, coordinates are for BOTTOM left corner of first character
+        graphics.DrawText(self.double_buffer, font, x, y + 16, graphics.Color(0, 255, 0), display_time)
     
 
 
@@ -250,29 +259,25 @@ class Driver():
 
 
 
-    def draw_text(self, x: int, y: int, text: str, r: int = 255, g: int = 255, b: int = 255) -> None:
+    def draw_text(self, x: int = 0, y: int = 20, text: str = '', rgb: list[int] = [255, 255, 255]) -> None:
         """Draws generic text at the coordinates specified. x and y coordinates should be the location of the upper left
         corner of the desired text. r, g, b are 8-bit color values between 0 and 255. Default is 255, 255, 255 (white)
 
         Args:
-            x (int): x coordinate
-            y (int): y coordinate
-            text (str): text to draw
-            r (int, optional): Red color value. Defaults to 255.
-            g (int, optional): Green color value. Defaults to 255.
-            b (int, optional): Blue color value. Defaults to 255.
+            x (int): x coordinate of upper left pixel. Defaults to 0.
+            y (int): x coordinate of upper left pixel. Defaults to 20.
+            text (str): text to draw. Defaults to ''.
+            colors (listint, optional): List of 8-bit RBG color values (0 to 255). Defaults to [255, 255, 255].
 
-        Returns:
-            _type_: None
+        Raises:
+            ValueError: if text argument is invalid
         """
 
-        if len(text) == 0: return None
+        if not text: raise ValueError('Invalid text argument.')
 
-        font = graphics.Font()
-
-        print('LENGTH = {}'.format(len(text)))
 
         # Letters are 5x8 pixels high
+        font = graphics.Font()
         font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
 
         # draw a black box, location measured from top left corner of screen to TOP left corner of black box
@@ -280,7 +285,7 @@ class Driver():
 
         # text starts at x and y provided, measured from top left corner of screen to BOTTOM left corner of text
         # Add 8 to y value because text is drawn from the bottom left corner and character height is 8
-        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(r, g, b), text)
+        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(rgb[0], rgb[1], rgb[2]), text)
 
 
     # @profile
@@ -293,10 +298,10 @@ class Driver():
         self.draw_weather()
         self.pick_random_word()
         self.refresh_time()
-        self.draw_train_time() # TODO make this generic - pass in arguments for station, line, direction
+        self.draw_train_time(40, 0, [0, 255, 0], 'D08', 'SV', 'west') # TODO make this generic - pass in arguments for station, line, direction
         self.draw_uv_index(20, 16)
         self.draw_current_temperature(20, 24)
-        self.draw_text(0, 20, 'Now:', 255, 255, 102)
+        self.draw_text(0, 20, 'Now:', [255, 255, 102])
         
         
         # Set up fonts, text color, and display string for the word of the day
@@ -333,13 +338,8 @@ class Driver():
                 graphics.DrawText(self.double_buffer, font, -xpos, 30, textColor, vocab_display_string) # lower left corner of char at (xpos, y)
                 graphics.DrawText(self.double_buffer, font, -xpos + (len(vocab_display_string) * font_width), 30, textColor, vocab_display_string) # lower left corner of char
 
-            # self.double_buffer.SetImage(self.image, -xpos)
-            # self.double_buffer.SetImage(self.image, -xpos + img_width)
-
-
             self.matrix.SwapOnVSync(self.double_buffer)
             schedule.run_pending()
-            # print(schedule.idle_seconds())
             time.sleep(0.03)
 
 
