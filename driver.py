@@ -34,8 +34,8 @@ class Driver():
         schedule.every().hour.do(self.driver_weather.update_weather)
         schedule.every().hour.do(self.draw_weather)
         schedule.every().hour.do(self.draw_temperatures)
-        schedule.every().hour.do(self.draw_uv_index, 20, 16)
-        schedule.every().hour.do(self.draw_current_temperature, 20, 24)
+        schedule.every().hour.do(self.draw_uv_index, 0, 24)
+        schedule.every().hour.do(self.draw_current_temperature, 20, 16)
         schedule.every(15).seconds.do(self.draw_train_time, 40, 0, [0, 255, 0], 'D08', 'SV', 'west')
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
@@ -299,9 +299,9 @@ class Driver():
         self.pick_random_word()
         self.refresh_time()
         self.draw_train_time(40, 0, [0, 255, 0], 'D08', 'SV', 'west') # TODO make this generic - pass in arguments for station, line, direction
-        self.draw_uv_index(20, 16)
-        self.draw_current_temperature(20, 24)
-        self.draw_text(0, 20, 'Now:', [255, 255, 102])
+        self.draw_uv_index(0, 24)
+        self.draw_current_temperature(20, 16)
+        self.draw_text(0, 16, 'Now:', [255, 255, 102])
         
         
         # Set up fonts, text color, and display string for the word of the day

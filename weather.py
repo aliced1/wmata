@@ -37,6 +37,7 @@ class Weather():
 
         return hourly
     
+    
 
     def print_weather_dict(self):
         df = pd.DataFrame.from_dict(self.weather_dict.get('hourly'))
@@ -44,16 +45,19 @@ class Weather():
         print(df)
 
 
+
     def is_rain_above_percent(self, percent: int) -> bool:
         rain_probabilities_list = self.get_weather_dict().get('precipitation_probability')
         return (max(rain_probabilities_list) >= percent)
     
+
 
     def get_daily_apparent_temp_extrema(self) -> dict:
         high = round(max(self.get_weather_dict().get('apparent_temperature')))
         low = round(min(self.get_weather_dict().get('apparent_temperature')))
         return {'high' : high, 'low' : low}
     
+
 
     def get_cloud_cover(self):
         cloudcover_low_list = self.get_weather_dict().get('cloudcover_low')
@@ -63,15 +67,22 @@ class Weather():
         return cloudcover_low_avg * 0.7 + cloudcover_mid_avg * 0.3
     
 
+
     def is_foggy(self) -> bool:
         return min(self.get_weather_dict().get('visibility')) < 1000
     
+
+
     def is_snowing(self) -> bool:
         return max(self.get_weather_dict().get('snowfall')) > 0.25
+
+
 
     def uv_index_list(self) -> list:
         return self.get_weather_dict().get('uv_index')
     
+
+
     def get_current_temperature(self) -> float:
         current_hour = datetime.datetime.now(pytz.timezone('US/Eastern')).hour
         return self.get_weather_dict().get('apparent_temperature')[current_hour]
