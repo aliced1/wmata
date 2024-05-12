@@ -87,12 +87,19 @@ class Weather():
         current_hour = datetime.datetime.now(pytz.timezone('US/Eastern')).hour
         return self.get_weather_dict().get('apparent_temperature')[current_hour]
 
+    
+    def get_current_windspeed_mph(self) -> float:
+        current_hour = datetime.datetime.now(pytz.timezone('US/Eastern')).hour
+        return self.get_weather_dict().get('windspeed_10m')[current_hour]
+        
+
+
 
 if __name__ == "__main__":
     weather_instance = Weather()
-    print(weather_instance.uv_index_list())
-    print(weather_instance.get_weather_dict().get('time'))
-    print(datetime.datetime.now(pytz.timezone('US/Eastern')).hour)
-    # weather_instance.print_weather_dict()
-    # print(weather_instance.get_weather_dict())
+    # print(weather_instance.uv_index_list())
+    # print(weather_instance.get_weather_dict().get('time'))
+    # print(datetime.datetime.now(pytz.timezone('US/Eastern')).hour)
+    weather_instance.print_weather_dict()
+    print(weather_instance.get_weather_dict())
             

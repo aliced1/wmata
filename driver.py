@@ -39,6 +39,7 @@ class Driver():
         schedule.every(15).seconds.do(self.draw_train_time, 40, 0, [0, 255, 0], 'D08', 'SV', 'west')
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(10).minutes.do(self.refresh_time)
+        schedule.every(1).hour.do(self.draw_text, 0, 16, 'Now:', [255, 255, 102])
 
 
 
@@ -111,6 +112,7 @@ class Driver():
             weather_image = Image.open('/home/alice/wmata/weather_images/sun.png').convert('RGB')
         
         self.double_buffer.SetImage(weather_image, 0, 0) # upper left corner of image
+
 
 
     def draw_temperatures(self):
@@ -288,7 +290,38 @@ class Driver():
         graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(rgb[0], rgb[1], rgb[2]), text)
 
 
-    # @profile
+
+    def draw_word_of_day(self):
+        
+        # Set up fonts, text color, and display string for the word of the day
+        font = graphics.Font()
+        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
+        font_width = 6
+        blackout = Image.open('/home/alice/wmata/16x64_black.png').convert('RGB')
+        textColor = graphics.Color(172, 44, 210)
+        vocab_display_string = self.word_of_day[0] + ' -- ' + self.word_of_day[1] + '     '
+
+        xpos = 0
+        counter = 1
+
+        while counter != 0:
+            self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
+            # Use a test image if word of day isn't working correctly
+            # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
+            counter += 1
+            if counter > 200:
+                xpos += 1
+            if (xpos > len(vocab_display_string) * font_width):
+                xpos = 0
+                counter = 0
+            graphics.DrawText(self.double_buffer, font, -xpos, 30, textColor, vocab_display_string) # lower left corner of char at (xpos, y)
+            graphics.DrawText(self.double_buffer, font, -xpos + (len(vocab_display_string) * font_width), 30, textColor, vocab_display_string) # lower left corner of char
+            time.sleep(0.03)
+        
+        self.double_buffer.SetImage(self.black_image(64,32), 0, 16)
+
+
+
     def draw_screen(self):
 
         # set buffer initially
@@ -302,49 +335,25 @@ class Driver():
         self.draw_uv_index(0, 24)
         self.draw_current_temperature(20, 16)
         self.draw_text(0, 16, 'Now:', [255, 255, 102])
-        
-        
-        # Set up fonts, text color, and display string for the word of the day
-        font = graphics.Font()
-        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/6x13.bdf")
-        font_width = 6
-        blackout = Image.open('/home/alice/wmata/16x64_black.png').convert('RGB')
-        textColor = graphics.Color(172, 44, 210)
-        vocab_display_string = self.word_of_day[0] + ' -- ' + self.word_of_day[1] + '     '
-        # graphics.DrawText(self.double_buffer, font, 0, 32, textColor, vocab_display_string)
-
-        xpos = 0
-        counter = 0
-
-
 
         while True:
             
             # TODO add display for cloud cover, snow, wind, rain depth
             # After pulling new data, update images and buffer for loop
 
-            if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
-                sys.exit(0)
-            
+            # TODO - replace this with something driven by schedule to avoid overhead of if statement
             if (self.now.hour > 6 and self.now.hour < 9):
-                self.double_buffer.SetImage(blackout, 0, 16) # upper left corner of image at (0, -16) from upper left corner
-                # test = Image.open('/home/alice/wmata/test.png').convert('RGB')
-                counter += 1
-                if counter > 200:
-                    xpos += 1
-                if (xpos > len(vocab_display_string) * font_width):
-                    xpos = 0
-                    counter = 0
-                graphics.DrawText(self.double_buffer, font, -xpos, 30, textColor, vocab_display_string) # lower left corner of char at (xpos, y)
-                graphics.DrawText(self.double_buffer, font, -xpos + (len(vocab_display_string) * font_width), 30, textColor, vocab_display_string) # lower left corner of char
-
+                self.draw_word_of_day()
+            
             self.matrix.SwapOnVSync(self.double_buffer)
             schedule.run_pending()
-            time.sleep(0.03)
+            time.sleep(2)
 
 
 if __name__ == "__main__":
     driver = Driver()
+    if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
+        sys.exit(0)
     # driver.driver_weather.print_weather_dict()
     # print()
     # print('train time:')
