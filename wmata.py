@@ -32,13 +32,16 @@ class Wmata():
    
 
     # line should be linecode, e.g. 'SV'
-    def get_closest_train(self, station: str, line: str, direction: str):
+    def get_closest_train(self, station: str, line: str, direction: str) -> str:
         trainList = self.get_trains_for_station(station)
 
         for t in trainList:
             if t.get('Line') != line: continue
             
             t_direction = self.calculate_train_direction(t.get('DestinationName'), t.get('Line'))
+
+
+
             if t_direction != direction: continue
 
             return t.get('Min')
@@ -50,6 +53,10 @@ class Wmata():
     def calculate_train_direction(self, stationName: str, line: str) -> str:
         line = self.line_code_mappings.get(line) 
         destination_index = line.get(stationName)
+
+        if destination_index is None:
+            return None
+
         halfway_index = round(len(line)/2)
         difference = halfway_index - destination_index
         if difference < 0: return 'east'

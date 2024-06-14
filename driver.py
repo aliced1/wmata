@@ -14,6 +14,8 @@ import schedule
 import wmata
 import numpy as np
 import math
+import logging 
+
 
 # TODO add guard clauses and exceptions
 # TODO add docstrings to all functions
@@ -31,14 +33,14 @@ class Driver():
 
 
     def set_up_schedules(self) -> None:
-        schedule.every().hour.do(self.driver_weather.update_weather)
-        schedule.every().hour.do(self.draw_weather)
-        schedule.every().hour.do(self.draw_temperatures)
-        schedule.every().hour.do(self.draw_uv_index, 0, 24)
-        schedule.every().hour.do(self.draw_current_temperature, 20, 16)
+        schedule.every(15).minutes.do(self.driver_weather.update_weather)
+        schedule.every(15).minutes.do(self.draw_weather)
+        schedule.every(15).minutes.do(self.draw_temperatures)
+        schedule.every(15).minutes.do(self.draw_uv_index, 0, 24)
+        schedule.every(15).minutes.do(self.draw_current_temperature, 20, 16)
         schedule.every(15).seconds.do(self.draw_train_time, 40, 0, [0, 255, 0], 'D08', 'SV', 'west')
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
-        schedule.every(10).minutes.do(self.refresh_time)
+        schedule.every(5).minutes.do(self.refresh_time)
         schedule.every(1).hour.do(self.draw_text, 0, 16, 'Now:', [255, 255, 102])
 
 
@@ -351,9 +353,12 @@ class Driver():
 
 
 if __name__ == "__main__":
+    logging.basicConfig(filename='./log.log', filemode='a')
+
     driver = Driver()
     if ((driver.now.hour >= 23) or (driver.now.hour <= 5)):
         sys.exit(0)
+    
     # driver.driver_weather.print_weather_dict()
     # print()
     # print('train time:')
@@ -366,4 +371,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('\nExiting\n')
         sys.exit(0)
+    except:
+        logging.exception('')
         

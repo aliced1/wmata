@@ -2,3 +2,4 @@ apitest.py
 header.py
 __pycache__/
 .vscode
+log.log
