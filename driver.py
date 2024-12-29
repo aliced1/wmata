@@ -15,6 +15,7 @@ import wmata
 import numpy as np
 import math
 import logging 
+import re
 
 
 # TODO add guard clauses and exceptions
@@ -41,6 +42,7 @@ class Driver():
         schedule.every(15).seconds.do(self.draw_train_time, 40, 0, [0, 255, 0], 'D08', 'SV', 'west')
         schedule.every().day.at("02:00", 'US/Eastern').do(self.pick_random_word)
         schedule.every(5).minutes.do(self.refresh_time)
+        schedule.every(5).seconds.do(self.draw_time, 34, 19, '', [255, 0, 105], "6x13B")
         schedule.every(1).hour.do(self.draw_text, 0, 16, 'Now:', [255, 255, 102])
 
 
@@ -100,7 +102,7 @@ class Driver():
 
         # TODO add night
         # All images are 16x16 pixels
-        if self.driver_weather.is_rain_above_percent(30):
+        if self.driver_weather.is_rain_above_percent(50):
             weather_image = Image.open('/home/alice/wmata/weather_images/rain.png').convert('RGB')
         elif self.driver_weather.is_snowing():
             weather_image = Image.open('/home/alice/wmata/weather_images/snow.png').convert('RGB')
@@ -262,8 +264,13 @@ class Driver():
         graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(color_list[0],color_list[1],color_list[2]), current_temperature_string)
 
 
+    def draw_time(self, x: int = 0, y: int = 13, text: str = '', rgb: list[int] = [255, 0, 105], size="6x13B"):
+        now = datetime.datetime.now().astimezone(pytz.timezone('America/New_York'))
+        hour = (now.hour + 11) % 12 + 1 
+        self.draw_text(x, y, f"{hour:02}:{now.minute:02}", rgb, size)
 
-    def draw_text(self, x: int = 0, y: int = 20, text: str = '', rgb: list[int] = [255, 255, 255]) -> None:
+
+    def draw_text(self, x: int = 0, y: int = 20, text: str = '', rgb: list[int] = [255, 255, 255], size="5x8") -> None:
         """Draws generic text at the coordinates specified. x and y coordinates should be the location of the upper left
         corner of the desired text. r, g, b are 8-bit color values between 0 and 255. Default is 255, 255, 255 (white)
 
@@ -272,6 +279,7 @@ class Driver():
             y (int): x coordinate of upper left pixel. Defaults to 20.
             text (str): text to draw. Defaults to ''.
             colors (listint, optional): List of 8-bit RBG color values (0 to 255). Defaults to [255, 255, 255].
+            size (str): which size text to use. Defaults to "5x8"
 
         Raises:
             ValueError: if text argument is invalid
@@ -282,14 +290,16 @@ class Driver():
 
         # Letters are 5x8 pixels high
         font = graphics.Font()
-        font.LoadFont("/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/5x8.bdf")
+        font.LoadFont(f"/home/alice/wmata/adafruit_rgb_library/rpi-rgb-led-matrix/fonts/{size}.bdf")
 
         # draw a black box, location measured from top left corner of screen to TOP left corner of black box
-        self.double_buffer.SetImage(self.black_image(5 * len(text), 8), x, y)
+        sizes = [int(z) for z in re.split('[xB]', size)[0:2]]
+        # print(sizes)
+        self.double_buffer.SetImage(self.black_image(sizes[0] * len(text), sizes[1]), x, y)
 
         # text starts at x and y provided, measured from top left corner of screen to BOTTOM left corner of text
         # Add 8 to y value because text is drawn from the bottom left corner and character height is 8
-        graphics.DrawText(self.double_buffer, font, x, y + 8, graphics.Color(rgb[0], rgb[1], rgb[2]), text)
+        graphics.DrawText(self.double_buffer, font, x, y + sizes[1], graphics.Color(rgb[0], rgb[1], rgb[2]), text)
 
 
 
@@ -344,7 +354,7 @@ class Driver():
             # After pulling new data, update images and buffer for loop
 
             # TODO - replace this with something driven by schedule to avoid overhead of if statement
-            if (self.now.hour > 6 and self.now.hour < 9):
+            if (self.now.hour > 6 and self.now.hour < 8):
                 self.draw_word_of_day()
             
             self.matrix.SwapOnVSync(self.double_buffer)
